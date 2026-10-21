@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Executive English Podcast Studio | GAGYO Consulting</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+    code, pre { font-family: 'JetBrains+Mono', monospace; }
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col">
+
+  <!-- TOP APP NAV -->
+  <header class="border-b border-slate-800 bg-slate-950/80 backdrop-blur sticky top-0 z-50 px-6 py-3.5 flex flex-wrap items-center justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center font-bold text-white shadow-lg shadow-blue-500/20">
+        <i data-lucide="headphones" class="w-5 h-5"></i>
+      </div>
+      <div>
+        <h1 class="text-base font-bold tracking-tight text-white flex items-center gap-2">
+          Executive Podcast Studio
+          <span class="text-xs bg-blue-950 text-blue-400 border border-blue-800 font-medium px-2 py-0.5 rounded-full">Executive English</span>
+        </h1>
+        <p class="text-xs text-slate-400">WSJ Tech & Strategic Decision Framework</p>
+      </div>
+    </div>
+
+    <!-- Student & Session Meta Selector -->
+    <div class="flex items-center gap-3 flex-wrap">
+      <div class="flex items-center gap-2 bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs">
+        <span class="text-slate-400 font-medium">Student:</span>
+        <select id="studentProfile" class="bg-transparent text-slate-200 font-semibold focus:outline-none cursor-pointer">
+          <option value="hanwha_cto" class="bg-slate-900">CTO Lee Changhee (Hanwha Life)</option>
+          <option value="samsung_vp" class="bg-slate-900">VP Corporate Strategy (Samsung C&T)</option>
+          <option value="posco_exec" class="bg-slate-900">Managing Director (POSCO Intl)</option>
+          <option value="general_csuite" class="bg-slate-900">General C-Suite / Global Executive</option>
+        </select>
+      </div>
+
+      <div class="flex items-center gap-2 bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs">
+        <span class="text-slate-400 font-medium">Session:</span>
+        <select id="sessionDuration" class="bg-transparent text-emerald-400 font-semibold focus:outline-none cursor-pointer">
+          <option value="60">60 Minutes</option>
+          <option value="90" selected>90 Minutes (Recommended)</option>
+          <option value="120">120 Minutes</option>
+        </select>
+      </div>
+
+      <button onclick="toggleConfigModal()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-medium flex items-center gap-1.5 border border-slate-700 transition">
+        <i data-lucide="folder-input" class="w-3.5 h-3.5"></i>
+        <span>Load / Edit Material</span>
+      </button>
+
+      <button onclick="exportDebriefReport()" class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-md shadow-blue-600/30 transition">
+        <i data-lucide="file-down" class="w-3.5 h-3.5"></i>
+        <span>Export Report</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN WORKSPACE DUAL PANE -->
+  <main class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-0 overflow-hidden">
+    
+    <!-- LEFT PANE: MEDIA PLAYER, TRANSCRIPT & PHRASE VAULT (5 COLS) -->
+    <aside class="lg:col-span-5 border-r border-slate-800 bg-slate-950 flex flex-col h-[calc(100vh-61px)] overflow-y-auto custom-scrollbar">
+      
+      <!-- AUDIO & SEGMENT CONTROL CARD -->
+      <div class="p-5 border-b border-slate-800 bg-slate-900/60">
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-xs uppercase tracking-wider font-bold text-slate-400 flex items-center gap-1.5">
+            <i data-lucide="radio" class="w-3.5 h-3.5 text-red-500 animate-pulse"></i> Source Audio Segment
+          </span>
+          <span id="activePodcastTitle" class="text-xs text-blue-400 font-medium truncate max-w-[220px]">WSJ Tech News Briefing</span>
+        </div>
+
+        <!-- Custom Audio Element -->
+        <audio id="audioElement" class="hidden" preload="metadata"></audio>
+
+        <!-- Player Controls -->
+        <div class="bg-slate-950 p-4 rounded-xl border border-slate-800">
+          <div class="flex items-center justify-between text-xs text-slate-400 mb-2 font-mono">
+            <span id="currentTimeDisplay">00:00</span>
+            <div class="flex items-center gap-2">
+              <span class="text-[10px] bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded border border-slate-700">Target: 4–8 min</span>
+              <span id="durationDisplay">00:00</span>
+            </div>
+          </div>
+
+          <!-- Progress Bar -->
+          <input type="range" id="seekSlider" value="0" min="0" step="1" class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-500 mb-4">
+
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <button onclick="skipTime(-10)" class="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition" title="Rewind 10s">
+                <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+              </button>
+              <button id="playPauseBtn" onclick="togglePlay()" class="w-10 h-10 bg-blue-600 hover:bg-blue-500 text-white rounded-full flex items-center justify-center transition shadow-lg shadow-blue-600/30">
+                <i data-lucide="play" class="w-5 h-5 ml-0.5" id="playIcon"></i>
+              </button>
+              <button onclick="skipTime(10)" class="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition" title="Forward 10s">
+                <i data-lucide="rotate-cw" class="w-4 h-4"></i>
+              </button>
+            </div>
+
+            <!-- Loop / Playback Controls -->
+            <div class="flex items-center gap-2">
+              <button id="loopSegmentBtn" onclick="toggleLoop()" class="px-2.5 py-1.5 rounded-lg text-xs font-medium border border-slate-700 text-slate-400 hover:text-slate-200 transition flex items-center gap-1.5">
+                <i data-lucide="repeat" class="w-3.5 h-3.5"></i>
+                <span id="loopStatus">Loop Off</span>
+              </button>
+
+              <select id="playbackSpeed" onchange="changeSpeed(this.value)" class="bg-slate-900 border border-slate-700 text-slate-300 rounded-lg px-2 py-1 text-xs cursor-pointer focus:outline-none">
+                <option value="0.8">0.8x</option>
+                <option value="1.0" selected>1.0x</option>
+                <option value="1.2">1.2x</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TRANSCRIPT ACCORDION -->
+      <div class="border-b border-slate-800">
+        <button onclick="toggleTranscriptView()" class="w-full px-5 py-3 flex items-center justify-between text-left text-xs font-semibold text-slate-300 hover:bg-slate-900 transition">
+          <span class="flex items-center gap-2">
+            <i data-lucide="file-text" class="w-4 h-4 text-blue-400"></i>
+            Verbatim Transcript (Scaffolding Support)
+          </span>
+          <span id="transcriptToggleLabel" class="text-[11px] text-slate-400 bg-slate-800 px-2 py-0.5 rounded border border-slate-700">Click to Expand</span>
+        </button>
+        <div id="transcriptContainer" class="hidden p-5 bg-slate-950 text-xs text-slate-300 max-h-60 overflow-y-auto leading-relaxed border-t border-slate-900 custom-scrollbar whitespace-pre-line font-normal">
+          No transcript loaded. Click "Load / Edit Material" to paste content.
+        </div>
+      </div>
+
+      <!-- FUNCTIONAL EXECUTIVE PHRASE VAULT -->
+      <div class="p-5 flex-1 flex flex-col">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <i data-lucide="sparkles" class="w-4 h-4 text-amber-400"></i>
+            <h3 class="text-xs uppercase tracking-wider font-bold text-slate-300">Functional Lexicon Vault</h3>
+          </div>
+          <span class="text-[10px] text-slate-500 font-mono">8 Functions</span>
+        </div>
+        <p class="text-[11px] text-slate-400 mb-3">Click any phrase to copy or inject it into active notes & simulations.</p>
+
+        <!-- Phrase Categories Grid -->
+        <div id="phraseVaultList" class="space-y-2.5 overflow-y-auto custom-scrollbar flex-1 pr-1">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+    </aside>
+
+    <!-- RIGHT PANE: 7-STAGE EXECUTIVE WORKSPACE (7 COLS) -->
+    <section class="lg:col-span-7 bg-slate-900 flex flex-col h-[calc(100vh-61px)] overflow-hidden">
+      
+      <!-- STAGE PROGRESS TABS -->
+      <nav class="border-b border-slate-800 bg-slate-950 px-4 py-2.5 flex items-center gap-1.5 overflow-x-auto custom-scrollbar">
+        <button onclick="setStage(1)" class="stage-tab active px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition flex items-center gap-1.5" data-stage="1">
+          <span class="w-4 h-4 rounded-full bg-slate-800 text-[10px] flex items-center justify-center font-bold">1</span>
+          Warm-Up
+        </button>
+        <button onclick="setStage(2)" class="stage-tab px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition flex items-center gap-1.5" data-stage="2">
+          <span class="w-4 h-4 rounded-full bg-slate-800 text-[10px] flex items-center justify-center font-bold">2</span>
+          First Listen
+        </button>
+        <button onclick="setStage(3)" class="stage-tab px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition flex items-center gap-1.5" data-stage="3">
+          <span class="w-4 h-4 rounded-full bg-slate-800 text-[10px] flex items-center justify-center font-bold">3</span>
+          Second Listen
+        </button>
+        <button onclick="setStage(4)" class="stage-tab px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition flex items-center gap-1.5" data-stage="4">
+          <span class="w-4 h-4 rounded-full bg-slate-800 text-[10px] flex items-center justify-center font-bold">4</span>
+          Language Mining
+        </button>
+        <button onclick="setStage(5)" class="stage-tab px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition flex items-center gap-1.5" data-stage="5">
+          <span class="w-4 h-4 rounded-full bg-slate-800 text-[10px] flex items-center justify-center font-bold">5</span>
+          Paraphrase
+        </button>
+        <button onclick="setStage(6)" class="stage-tab px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition flex items-center gap-1.5" data-stage="6">
+          <span class="w-4 h-4 rounded-full bg-slate-800 text-[10px] flex items-center justify-center font-bold">6</span>
+          Simulation
+        </button>
+        <button onclick="setStage(7)" class="stage-tab px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition flex items-center gap-1.5" data-stage="7">
+          <span class="w-4 h-4 rounded-full bg-slate-800 text-[10px] flex items-center justify-center font-bold">7</span>
+          Feedback & Rerun
+        </button>
+      </nav>
+
+      <!-- ACTIVE STAGE CONTENT CONTAINER -->
+      <div class="flex-1 overflow-y-auto p-6 custom-scrollbar" id="stageContentArea">
+        <!-- Rendered by JavaScript based on activeStage -->
+      </div>
+
+      <!-- BOTTOM CONTROL BAR -->
+      <footer class="border-t border-slate-800 bg-slate-950/80 px-6 py-3 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <button id="prevStageBtn" onclick="navigateStage(-1)" class="px-3.5 py-1.5 rounded-lg border border-slate-700 text-xs font-medium text-slate-300 hover:bg-slate-800 transition flex items-center gap-1">
+            <i data-lucide="chevron-left" class="w-4 h-4"></i> Previous Stage
+          </button>
+          <span id="stageIndicator" class="text-xs text-slate-500 font-mono">Stage 1 of 7</span>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <button onclick="quickSaveNotes()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-medium transition flex items-center gap-1.5 border border-slate-700">
+            <i data-lucide="save" class="w-3.5 h-3.5"></i> Save Session State
+          </button>
+          <button id="nextStageBtn" onclick="navigateStage(1)" class="px-4 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold transition flex items-center gap-1 shadow-md shadow-blue-600/20">
+            Next Stage <i data-lucide="chevron-right" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </footer>
+    </section>
+  </main>
+
+  <!-- MODAL: LOAD / EDIT LESSON MATERIAL -->
+  <div id="configModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+      <div class="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-950">
+        <h3 class="text-sm font-bold text-white flex items-center gap-2">
+          <i data-lucide="file-cog" class="w-4 h-4 text-blue-400"></i>
+          Configure Podcast Lesson Material
+        </h3>
+        <button onclick="toggleConfigModal()" class="text-slate-400 hover:text-white">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="p-6 overflow-y-auto space-y-4 custom-scrollbar text-xs">
+        <div>
+          <button onclick="loadDemoPreset()" class="w-full py-2.5 px-4 bg-gradient-to-r from-blue-700 to-indigo-700 hover:from-blue-600 hover:to-indigo-600 text-white font-semibold rounded-xl shadow-lg transition flex items-center justify-center gap-2">
+            <i data-lucide="sparkle" class="w-4 h-4"></i>
+            Load Pre-Configured Lesson: WSJ "Rollerkospi" & AI Concentrated Risk (Lee Changhee CTO)
+          </button>
+          <div class="relative flex py-3 items-center">
+            <div class="flex-grow border-t border-slate-800"></div>
+            <span class="flex-shrink mx-4 text-slate-500 text-[10px] uppercase tracking-wider font-semibold">Or enter custom podcast data</span>
+            <div class="flex-grow border-t border-slate-800"></div>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-slate-300 font-semibold mb-1.5">Episode Title / Topic</label>
+          <input type="text" id="inputTitle" placeholder="e.g., WSJ Tech News Briefing: Inside AI Memory Boom" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-blue-500">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-slate-300 font-semibold mb-1.5">Audio File / Direct Stream URL</label>
+            <input type="text" id="inputAudioUrl" placeholder="https://domain.com/podcast.mp3" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-blue-500">
+          </div>
+          <div>
+            <label class="block text-slate-300 font-semibold mb-1.5">Or Local Audio File</label>
+            <input type="file" id="inputAudioFile" accept="audio/*" class="w-full text-slate-400 text-xs file:mr-2 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-slate-800 file:text-slate-200 hover:file:bg-slate-700 cursor-pointer">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-slate-300 font-semibold mb-1.5">Podcast Transcript (Segment)</label>
+          <textarea id="inputTranscript" rows="8" placeholder="Paste the verbatim or summary podcast transcript here..." class="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-slate-200 font-mono text-[11px] leading-relaxed focus:outline-none focus:border-blue-500"></textarea>
+        </div>
+      </div>
+
+      <div class="px-6 py-3.5 border-t border-slate-800 bg-slate-950 flex justify-end gap-2.5">
+        <button onclick="toggleConfigModal()" class="px-4 py-2 rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-800 text-xs font-medium">Cancel</button>
+        <button onclick="saveConfigMaterial()" class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold shadow-md shadow-blue-600/30">Apply to Studio</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT APPLICATION LOGIC -->
+  <script>
+    // --- STATE MANAGEMENT ---
+    let activeStage = 1;
+    let isLooping = false;
+    let loopStart = 0;
+    let loopEnd = 480; // Default: 8-min loop
+
+    // Current Active Lesson Data (Initialized with CTO Lee Changhee Lesson)
+    let currentLesson = {
+      title: "WSJ Tech News: The 'Rollerkospi' & AI Memory Concentration Risk",
+      audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", // Working fallback sample
+      transcript: `Imani Moise (Host): From The Wall Street Journal, this is Tech News Briefing. Today, South Korea's benchmark index has experienced unprecedented volatility, dubbed the 'Rollerkospi'. Driven by insatiable global demand for AI chips, Samsung Electronics and SK Hynix came to represent over 50% of the entire Kospi index.
+
+Jack Pitcher (Guest): Well, Imani, it really boils down to two things: extreme concentration in the AI memory trade, and a massive retail investor base using leverage. Individual investors, known as 'ants' (gaemi), account for 60-70% of daily volume. Regulators permitted 2x single-stock leveraged ETFs in late May. When Wall Street questioned Big Tech's AI ROI and Chinese legacy competition surfaced, a 5% pullback triggered forced margin liquidations, wiping out $2.5 trillion in weeks.
+
+Imani Moise: What is the broader takeaway for tech investors and enterprise leaders?
+
+Jack Pitcher: It is a cautionary tale of concentration risk and liquidity spirals. Even when the underlying secular trend—like artificial intelligence—is real, hyper-leveraged single-theme exposure creates massive systemic fragility.`,
+      warmupQuestion: "Why do profitable tech and financial enterprises often continue concentrating capital in high-volatility single-theme assets, and how should an executive establish guardrails against systemic shocks?",
+      macroQuestions: [
+        "What is the central argument regarding market concentration vs. secular technological transformation?",
+        "According to the guest, what systemic vulnerability was magnified by retail leverage and algorithmic forced sales?"
+      ],
+      miningPhrases: [
+        {
+          function: "Explaining Causes",
+          phrase: "This can largely be attributed to...",
+          korean: "~에 크게 기인합니다",
+          context: "The market drawdown can largely be attributed to cascading automated liquidations."
+        },
+        {
+          function: "Identifying Trade-offs",
+          phrase: "That comes at the expense of...",
+          korean: "~을 희생하여 (대가를 치르고)",
+          context: "Pursuing rapid CapEx yields often comes at the expense of long-term balance sheet resilience."
+        },
+        {
+          function: "Challenging Assumptions",
+          phrase: "That assumes that...",
+          korean: "그것은 ~라는 가정을 전제로 합니다",
+          context: "That assumes that enterprise AI adoption will generate positive ROI in the immediate fiscal year."
+        },
+        {
+          function: "Qualifying a Claim",
+          phrase: "That may be true to some extent, but...",
+          korean: "어느 정도 사실일 수 있으나...",
+          context: "That may be true to some extent, but we must account for liquidity constraints during volume surges."
+        },
+        {
+          function: "Discussing Implications",
+          phrase: "The broader implication for us is...",
+          korean: "우리에게 시사하는 바는...",
+          context: "The broader implication for Hanwha Life is transitioning from batch processing to streaming ALM pipelines."
+        },
+        {
+          function: "Making Recommendations",
+          phrase: "The most pragmatic approach would be to...",
+          korean: "가장 실용적이고 현실적인 접근법은...",
+          context: "The most pragmatic approach would be to negotiate tier-committed reserved compute instances."
+        },
+        {
+          function: "Expressing Uncertainty",
+          phrase: "There is still considerable uncertainty around...",
+          korean: "~에 여전히 상당한 불확실성이 존재합니다",
+          context: "There is still considerable uncertainty around secondary pricing power in enterprise SaaS."
+        },
+        {
+          function: "Summarizing a Position",
+          phrase: "Ultimately, it comes down to...",
+          korean: "결국 핵심은 ~로 귀결됩니다",
+          context: "Ultimately, it comes down to architectural decoupling and failover redundancy."
+        }
+      ],
+      simulation: {
+        scenario: "The Boardroom Capital Allocation Dilemma: Public Cloud vs. Local GPU Clusters",
+        context: "Hanwha Life is preparing its next 3-year AI infrastructure budget. Due to semiconductor volatility, the Investment Committee wants to cut CapEx on physical chips and shift purely to cloud services, despite data compliance concerns from the Financial Supervisory Service (FSS).",
+        mandate: [
+          "Summarize the trade-off between CapEx risk and localized data sovereignty.",
+          "Present two alternative architectural strategies.",
+          "Defend your recommendation against board skepticism regarding AI monetization."
+        ],
+        pushbackCards: [
+          "Pushback 1: 'Why commit any budget to on-prem hardware if chip values plunge 40%?'",
+          "Pushback 2: 'Can our existing microservices gracefully handle sudden API spikes without crashing customer portals?'",
+          "Pushback 3: 'What evidence proves this investment won't remain trapped in pilot purgatory?'"
+        ]
+      }
+    };
+
+    // Instructor Debrief Logging State
+    let studentDebriefLogs = [
+      {
+        original: "Our company want to buy hardware, but price is very up and down so it is dangerous.",
+        critique: "Lacked diplomatic framing and high-level financial terms.",
+        upgrade: "Committing entirely to capital expenditure on localized GPU clusters poses severe depreciation and supply volatility risks."
+      }
+    ];
+
+    // --- INITIALIZATION ---
+    document.addEventListener("DOMContentLoaded", () => {
+      lucide.createIcons();
+      initAudio();
+      renderPhraseVault();
+      renderActiveStage();
+    });
+
+    // --- AUDIO CONTROLLER ---
+    const audio = document.getElementById("audioElement");
+    const playPauseBtn = document.getElementById("playPauseBtn");
+    const playIcon = document.getElementById("playIcon");
+    const seekSlider = document.getElementById("seekSlider");
+    const currentTimeDisplay = document.getElementById("currentTimeDisplay");
+    const durationDisplay = document.getElementById("durationDisplay");
+
+    function initAudio() {
+      audio.src = currentLesson.audioUrl;
+      audio.addEventListener("timeupdate", updateAudioProgress);
+      audio.addEventListener("loadedmetadata", () => {
+        seekSlider.max = Math.floor(audio.duration || 600);
+        durationDisplay.textContent = formatTime(audio.duration || 600);
+      });
+      seekSlider.addEventListener("input", (e) => {
+        audio.currentTime = e.target.value;
+      });
+    }
+
+    function togglePlay() {
+      if (audio.paused) {
+        audio.play().catch(e => console.log("Audio stream playback notice:", e));
+        playIcon.setAttribute("data-lucide", "pause");
+      } else {
+        audio.pause();
+        playIcon.setAttribute("data-lucide", "play");
+      }
+      lucide.createIcons();
+    }
+
+    function skipTime(seconds) {
+      audio.currentTime = Math.max(0, Math.min(audio.duration || 9999, audio.currentTime + seconds));
+    }
+
+    function changeSpeed(val) {
+      audio.playbackRate = parseFloat(val);
+    }
+
+    function toggleLoop() {
+      isLooping = !isLooping;
+      const status = document.getElementById("loopStatus");
+      const btn = document.getElementById("loopSegmentBtn");
+      if (isLooping) {
+        status.textContent = "Loop (4–8m)";
+        btn.classList.add("bg-blue-900/60", "text-blue-400", "border-blue-600");
+      } else {
+        status.textContent = "Loop Off";
+        btn.classList.remove("bg-blue-900/60", "text-blue-400", "border-blue-600");
+      }
+    }
+
+    function updateAudioProgress() {
+      seekSlider.value = Math.floor(audio.currentTime);
+      currentTimeDisplay.textContent = formatTime(audio.currentTime);
+
+      // Handle Segment Looping
+      if (isLooping && audio.currentTime >= loopEnd) {
+        audio.currentTime = loopStart;
+      }
+    }
+
+    function formatTime(secs) {
+      if (isNaN(secs)) return "00:00";
+      const m = Math.floor(secs / 60);
+      const s = Math.floor(secs % 60);
+      return `${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
+    }
+
+    function toggleTranscriptView() {
+      const container = document.getElementById("transcriptContainer");
+      const label = document.getElementById("transcriptToggleLabel");
+      if (container.classList.contains("hidden")) {
+        container.classList.remove("hidden");
+        label.textContent = "Hide Transcript";
+      } else {
+        container.classList.add("hidden");
+        label.textContent = "Click to Expand";
+      }
+    }
+
+    // --- PHRASE VAULT RENDERING ---
+    function renderPhraseVault() {
+      const vaultContainer = document.getElementById("phraseVaultList");
+      vaultContainer.innerHTML = currentLesson.miningPhrases.map((item, idx) => `
+        <div onclick="copyPhraseToClipboard('${item.phrase.replace(/'/g, "\\'")}')" class="group p-2.5 rounded-lg bg-slate-900 hover:bg-slate-800/90 border border-slate-800 hover:border-blue-500/50 cursor-pointer transition">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-[10px] uppercase font-bold text-blue-400 tracking-wider">${item.function}</span>
+            <span class="text-[10px] text-slate-500 group-hover:text-slate-300">Copy</span>
+          </div>
+          <div class="text-xs font-semibold text-slate-200 group-hover:text-blue-300 transition">${item.phrase}</div>
+          <div class="text-[11px] text-slate-400 font-normal mt-0.5">${item.korean}</div>
+        </div>
+      `).join("");
+    }
+
+    function copyPhraseToClipboard(text) {
+      navigator.clipboard.writeText(text);
+      alert(`Copied to clipboard: "${text}"`);
+    }
+
+    // --- STAGE NAVIGATION & RENDERING ---
+    function setStage(stageNum) {
+      activeStage = stageNum;
+      document.querySelectorAll(".stage-tab").forEach(tab => {
+        const s = parseInt(tab.getAttribute("data-stage"));
+        if (s === activeStage) {
+          tab.className = "stage-tab active px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition flex items-center gap-1.5 bg-blue-600 text-white shadow-sm";
+        } else {
+          tab.className = "stage-tab px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition flex items-center gap-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-900";
+        }
+      });
+      document.getElementById("stageIndicator").textContent = `Stage ${activeStage} of 7`;
+      renderActiveStage();
+    }
+
+    function navigateStage(delta) {
+      const next = activeStage + delta;
+      if (next >= 1 && next <= 7) {
+        setStage(next);
+      }
+    }
+
+    function renderActiveStage() {
+      const container = document.getElementById("stageContentArea");
+      switch (activeStage) {
+        case 1:
+          container.innerHTML = `
+            <div class="space-y-5 animate-fadeIn">
+              <div class="bg-blue-950/40 border border-blue-900/60 p-5 rounded-2xl">
+                <div class="flex items-center gap-2 text-blue-400 text-xs font-bold uppercase tracking-wider mb-2">
+                  <i data-lucide="help-circle" class="w-4 h-4"></i> Stage 1: Executive Warm-Up (5–10 min)
+                </div>
+                <h2 class="text-lg font-bold text-white mb-2">${currentLesson.warmupQuestion}</h2>
+                <p class="text-xs text-slate-400">Frame the business dilemma before playing any audio. Prompt the student to articulate their initial strategic stance.</p>
+              </div>
+
+              <div class="bg-slate-950 p-5 rounded-xl border border-slate-800 space-y-3">
+                <label class="text-xs font-semibold text-slate-300 block">Student Initial Stance & Speaking Notes:</label>
+                <textarea id="stage1Notes" rows="6" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-xs text-slate-200 focus:outline-none focus:border-blue-500 leading-relaxed font-mono" placeholder="Record student's spontaneous arguments, premises, and word choice..."></textarea>
+                <div class="flex justify-between items-center text-[11px] text-slate-500">
+                  <span>Instructor Tip: Do not interrupt yet. Observe fluency and sentence structures.</span>
+                  <span class="text-emerald-400 font-medium">Goal: Spontaneous reasoning</span>
+                </div>
+              </div>
+            </div>
+          `;
+          break;
+
+        case 2:
+          container.innerHTML = `
+            <div class="space-y-5 animate-fadeIn">
+              <div class="bg-indigo-950/40 border border-indigo-900/60 p-5 rounded-2xl">
+                <div class="flex items-center gap-2 text-indigo-400 text-xs font-bold uppercase tracking-wider mb-2">
+                  <i data-lucide="ear" class="w-4 h-4"></i> Stage 2: First Listen — Capture the Big Picture (5–10 min)
+                </div>
+                <h2 class="text-base font-bold text-white mb-2">Listen without transcript to capture macro stance and underlying business tension.</h2>
+                <p class="text-xs text-slate-400">Avoid testing minor details. Focus exclusively on strategic direction and speaker perspective.</p>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800">
+                  <span class="text-[11px] text-indigo-400 font-bold uppercase tracking-wider block mb-1">Core Probe A</span>
+                  <p class="text-xs font-semibold text-slate-200 mb-2">${currentLesson.macroQuestions[0]}</p>
+                  <textarea rows="4" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs text-slate-200 focus:outline-none" placeholder="Student notes on core premise..."></textarea>
+                </div>
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800">
+                  <span class="text-[11px] text-indigo-400 font-bold uppercase tracking-wider block mb-1">Core Probe B</span>
+                  <p class="text-xs font-semibold text-slate-200 mb-2">${currentLesson.macroQuestions[1]}</p>
+                  <textarea rows="4" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs text-slate-200 focus:outline-none" placeholder="Student notes on systemic risks..."></textarea>
+                </div>
+              </div>
+            </div>
+          `;
+          break;
+
+        case 3:
+          container.innerHTML = `
+            <div class="space-y-5 animate-fadeIn">
+              <div class="bg-cyan-950/40 border border-cyan-900/60 p-5 rounded-2xl">
+                <div class="flex items-center gap-2 text-cyan-400 text-xs font-bold uppercase tracking-wider mb-2">
+                  <i data-lucide="layers" class="w-4 h-4"></i> Stage 3: Second Listen — Analyze the Argument (10–15 min)
+                </div>
+                <h2 class="text-base font-bold text-white mb-2">Dissect the argument using the Executive Logic Grid.</h2>
+                <p class="text-xs text-slate-400">Map the evidence against implicit corporate assumptions and operational vulnerabilities.</p>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800">
+                  <h4 class="text-xs font-bold text-blue-400 mb-1">1. Underlying Assumptions</h4>
+                  <p class="text-[11px] text-slate-400 mb-2">What does the speaker take for granted?</p>
+                  <textarea rows="4" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-slate-200"></textarea>
+                </div>
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800">
+                  <h4 class="text-xs font-bold text-amber-400 mb-1">2. Operational Trade-Offs</h4>
+                  <p class="text-[11px] text-slate-400 mb-2">What is sacrificed or compromised?</p>
+                  <textarea rows="4" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-slate-200"></textarea>
+                </div>
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800">
+                  <h4 class="text-xs font-bold text-red-400 mb-1">3. Systemic Risk Exposure</h4>
+                  <p class="text-[11px] text-slate-400 mb-2">What happens if market conditions turn?</p>
+                  <textarea rows="4" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-slate-200"></textarea>
+                </div>
+              </div>
+            </div>
+          `;
+          break;
+
+        case 4:
+          container.innerHTML = `
+            <div class="space-y-5 animate-fadeIn">
+              <div class="bg-amber-950/40 border border-amber-900/60 p-5 rounded-2xl">
+                <div class="flex items-center gap-2 text-amber-400 text-xs font-bold uppercase tracking-wider mb-2">
+                  <i data-lucide="book-open" class="w-4 h-4"></i> Stage 4: Functional Language Mining (10–15 min)
+                </div>
+                <h2 class="text-base font-bold text-white mb-2">Extract executive-level collocations and transition frameworks.</h2>
+                <p class="text-xs text-slate-400">Do not teach isolated word lists. Practice phrasing organized by communicative function.</p>
+              </div>
+
+              <div class="space-y-3">
+                ${currentLesson.miningPhrases.slice(0, 4).map(p => `
+                  <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-3">
+                    <div class="space-y-1">
+                      <div class="flex items-center gap-2">
+                        <span class="text-xs font-bold text-white font-mono">${p.phrase}</span>
+                        <span class="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded">${p.function}</span>
+                      </div>
+                      <p class="text-xs text-slate-400 italic">"${p.context}"</p>
+                      <p class="text-[11px] text-amber-400/90">${p.korean}</p>
+                    </div>
+                    <button onclick="injectPhraseIntoNotes('${p.phrase}')" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold whitespace-nowrap border border-slate-700 self-start md:self-auto">
+                      Drill Phrase
+                    </button>
+                  </div>
+                `).join("")}
+              </div>
+            </div>
+          `;
+          break;
+
+        case 5:
+          container.innerHTML = `
+            <div class="space-y-5 animate-fadeIn">
+              <div class="bg-emerald-950/40 border border-emerald-900/60 p-5 rounded-2xl">
+                <div class="flex items-center gap-2 text-emerald-400 text-xs font-bold uppercase tracking-wider mb-2">
+                  <i data-lucide="repeat" class="w-4 h-4"></i> Stage 5: Reconstruct & Paraphrase Progression (10–15 min)
+                </div>
+                <h2 class="text-base font-bold text-white mb-2">The 4-Step Fluency Progression: Moving from comprehension to independent reasoning.</h2>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
+                  <span class="text-[10px] bg-slate-800 text-slate-300 font-bold px-2 py-0.5 rounded">Step 1: Immediate Recall</span>
+                  <p class="text-xs text-slate-300">"What was the speaker's main thesis without looking at notes?"</p>
+                  <textarea rows="3" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-slate-200" placeholder="Student delivers 30-sec spoken summary..."></textarea>
+                </div>
+
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
+                  <span class="text-[10px] bg-slate-800 text-slate-300 font-bold px-2 py-0.5 rounded">Step 2: 3-Sentence Logic Reconstruction</span>
+                  <p class="text-xs text-slate-300">Format: 1. Core Problem → 2. Complication → 3. Solution.</p>
+                  <textarea rows="3" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-slate-200" placeholder="Sentence 1: ... Sentence 2: ... Sentence 3: ..."></textarea>
+                </div>
+
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
+                  <span class="text-[10px] bg-blue-900 text-blue-300 font-bold px-2 py-0.5 rounded">Step 3: Executive Committee Upgrade</span>
+                  <p class="text-xs text-slate-300">Explain the same argument as a formal C-suite briefing with precise tone.</p>
+                  <textarea rows="3" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-slate-200" placeholder="Executive pitch delivery..."></textarea>
+                </div>
+
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
+                  <span class="text-[10px] bg-emerald-900 text-emerald-300 font-bold px-2 py-0.5 rounded">Step 4: Company Transfer</span>
+                  <p class="text-xs text-slate-300">"How does this dynamic apply directly to your division at Hanwha?"</p>
+                  <textarea rows="3" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-slate-200" placeholder="Application to Korean market / Hanwha operations..."></textarea>
+                </div>
+              </div>
+            </div>
+          `;
+          break;
+
+        case 6:
+          container.innerHTML = `
+            <div class="space-y-5 animate-fadeIn">
+              <div class="bg-purple-950/40 border border-purple-900/60 p-5 rounded-2xl">
+                <div class="flex items-center gap-2 text-purple-400 text-xs font-bold uppercase tracking-wider mb-2">
+                  <i data-lucide="shield-alert" class="w-4 h-4"></i> Stage 6: Executive Simulation & Role-Play (15–25 min)
+                </div>
+                <h2 class="text-base font-bold text-white mb-1">${currentLesson.simulation.scenario}</h2>
+                <p class="text-xs text-slate-300 leading-relaxed">${currentLesson.simulation.context}</p>
+              </div>
+
+              <!-- Student Mandate vs Instructor Pushback -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-slate-950 p-5 rounded-xl border border-slate-800">
+                  <h4 class="text-xs font-bold text-emerald-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                    <i data-lucide="check-circle" class="w-4 h-4"></i> Student Deliverables
+                  </h4>
+                  <ul class="space-y-2.5 text-xs text-slate-300">
+                    ${currentLesson.simulation.mandate.map(m => `
+                      <li class="flex items-start gap-2">
+                        <span class="text-emerald-500 font-bold">•</span>
+                        <span>${m}</span>
+                      </li>
+                    `).join("")}
+                  </ul>
+                </div>
+
+                <div class="bg-slate-950 p-5 rounded-xl border border-slate-800">
+                  <h4 class="text-xs font-bold text-rose-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                    <i data-lucide="alert-octagon" class="w-4 h-4"></i> Instructor Objection Cards
+                  </h4>
+                  <ul class="space-y-2.5 text-xs text-slate-300">
+                    ${currentLesson.simulation.pushbackCards.map(c => `
+                      <li class="p-2.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 font-medium">
+                        ${c}
+                      </li>
+                    `).join("")}
+                  </ul>
+                </div>
+              </div>
+            </div>
+          `;
+          break;
+
+        case 7:
+          container.innerHTML = `
+            <div class="space-y-5 animate-fadeIn">
+              <div class="bg-rose-950/40 border border-rose-900/60 p-5 rounded-2xl">
+                <div class="flex items-center gap-2 text-rose-400 text-xs font-bold uppercase tracking-wider mb-2">
+                  <i data-lucide="refresh-cw" class="w-4 h-4"></i> Stage 7: Feedback, Upgrade & Second Attempt (5–10 min)
+                </div>
+                <h2 class="text-base font-bold text-white mb-2">High-Impact Executive Coaching Rubric</h2>
+                <p class="text-xs text-slate-400">Log the student's initial phrasing, demonstrate the diplomatic executive alternative, and rerun the pitch.</p>
+              </div>
+
+              <!-- Real-Time Upgrade Logger -->
+              <div class="bg-slate-950 p-5 rounded-xl border border-slate-800 space-y-4">
+                <h3 class="text-xs font-bold text-slate-200">Session Upgrade Tracker</h3>
+                <div id="debriefLogContainer" class="space-y-3">
+                  ${studentDebriefLogs.map((log, idx) => `
+                    <div class="p-3.5 rounded-lg bg-slate-900 border border-slate-800 space-y-2">
+                      <div class="flex items-start justify-between text-xs">
+                        <span class="text-slate-400">Student Utterance: <span class="text-rose-300 font-mono">"${log.original}"</span></span>
+                        <span class="text-[10px] text-amber-400 bg-amber-950/50 px-2 py-0.5 rounded border border-amber-900/50">${log.critique}</span>
+                      </div>
+                      <div class="text-xs text-emerald-400 font-semibold font-mono bg-slate-950 p-2.5 rounded border border-slate-800">
+                        → Executive Alternative: "${log.upgrade}"
+                      </div>
+                    </div>
+                  `).join("")}
+                </div>
+
+                <!-- Add New Log Entry Form -->
+                <div class="pt-3 border-t border-slate-800 grid grid-cols-1 md:grid-cols-3 gap-2">
+                  <input type="text" id="logStudentSaid" placeholder="What student said..." class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200">
+                  <input type="text" id="logCritique" placeholder="Critique (e.g., too direct, vague)..." class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200">
+                  <div class="flex gap-2">
+                    <input type="text" id="logUpgrade" placeholder="Executive upgrade wording..." class="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200">
+                    <button onclick="addDebriefEntry()" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold">Add</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+          break;
+      }
+      lucide.createIcons();
+    }
+
+    function addDebriefEntry() {
+      const orig = document.getElementById("logStudentSaid").value;
+      const crit = document.getElementById("logCritique").value;
+      const up = document.getElementById("logUpgrade").value;
+      if (!orig || !up) return;
+
+      studentDebriefLogs.push({ original: orig, critique: crit || "Precision polish", upgrade: up });
+      renderActiveStage();
+    }
+
+    function injectPhraseIntoNotes(phrase) {
+      alert(`Selected for drill: "${phrase}"\nHave the student construct an on-the-fly sentence applying this phrase to their business.`);
+    }
+
+    // --- MODAL & CONFIG CONTROLS ---
+    function toggleConfigModal() {
+      const modal = document.getElementById("configModal");
+      modal.classList.toggle("hidden");
+    }
+
+    function loadDemoPreset() {
+      document.getElementById("inputTitle").value = "WSJ Tech News: 'Rollerkospi' & AI Memory Concentration";
+      document.getElementById("inputTranscript").value = currentLesson.transcript;
+      document.getElementById("inputAudioUrl").value = currentLesson.audioUrl;
+      saveConfigMaterial();
+      toggleConfigModal();
+    }
+
+    function saveConfigMaterial() {
+      const title = document.getElementById("inputTitle").value;
+      const transcript = document.getElementById("inputTranscript").value;
+      const audioUrl = document.getElementById("inputAudioUrl").value;
+      const audioFile = document.getElementById("inputAudioFile").files[0];
+
+      if (title) {
+        currentLesson.title = title;
+        document.getElementById("activePodcastTitle").textContent = title;
+      }
+      if (transcript) {
+        currentLesson.transcript = transcript;
+        document.getElementById("transcriptContainer").textContent = transcript;
+      }
+      if (audioFile) {
+        audio.src = URL.createObjectURL(audioFile);
+        currentLesson.audioUrl = "Local Upload";
+      } else if (audioUrl) {
+        audio.src = audioUrl;
+        currentLesson.audioUrl = audioUrl;
+      }
+
+      toggleConfigModal();
+      alert("Lesson material updated successfully!");
+    }
+
+    function quickSaveNotes() {
+      alert("Session state and notes saved locally.");
+    }
+
+    // --- EXPORT POST-CLASS REPORT (HTML / MARKDOWN) ---
+    function exportDebriefReport() {
+      const studentName = document.getElementById("studentProfile").selectedOptions[0].text;
+      const duration = document.getElementById("sessionDuration").value;
+      
+      const reportMarkdown = `# Executive English Session Takeaways
+**Student:** ${studentName}  
+**Date:** ${new Date().toLocaleDateString('ko-KR')} | **Format:** ${duration}-Minute Executive Coaching  
+**Topic:** ${currentLesson.title}  
+
+---
+
+## 1. Core Strategic Problem
+${currentLesson.warmupQuestion}
+
+## 2. High-Impact Language Upgrades
+${studentDebriefLogs.map(l => `* **Student Formulation:** "${l.original}"\n  * **Executive Standard:** "${l.upgrade}"\n  * *Focus Note:* ${l.critique}`).join("\n\n")}
+
+## 3. Reusable Functional Expressions
+${currentLesson.miningPhrases.slice(0, 5).map(p => `* **${p.phrase}** (${p.function}) — *${p.korean}*\n  * Example: "${p.context}"`).join("\n\n")}
+
+## 4. Post-Class Transfer Assignment
+Record a 90-second executive voice note briefing your committee on how to manage enterprise concentration risk without sacrificing AI compute capabilities.
+`;
+
+      const blob = new Blob([reportMarkdown], { type: "text/markdown;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `Executive_Lesson_Debrief_${new Date().toISOString().slice(0,10)}.md`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  </script>
+</body>
+</html>
